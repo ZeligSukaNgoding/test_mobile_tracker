@@ -1,1060 +1,346 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-  <meta name="theme-color" content="#0b0b0c" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <title>AI Object Scanner</title>
-  <style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000">
+<title>AI Object Scanner</title>
 
-/* ===== INLINED CSS: style.css ===== */
-:root {
-  --bg: #0b0b0c;
-  --surface: #151516;
-  --surface-2: #1c1c1e;
-  --surface-3: #242427;
-  --text: #f5f5f5;
-  --muted: #929296;
-  --border: #303034;
-  --border-light: #404045;
-  --accent: #f0f0f0;
-  --accent-dark: #111111;
-  --success: #d8d8d8;
-  --danger: #b9b9bd;
-  --shadow: 0 14px 36px rgba(0, 0, 0, .24);
-  --radius: 14px;
-  --touch: 46px;
-}
-
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--bg); }
-body {
-  margin: 0;
-  min-height: 100vh;
-  min-height: 100svh;
-  background: radial-gradient(circle at top, #171719 0, var(--bg) 34rem);
-  color: var(--text);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-button, select, input { font: inherit; }
-button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-button:disabled { cursor: not-allowed; opacity: .45; }
-
-.app-shell {
-  width: min(1180px, calc(100% - 28px));
-  margin: 0 auto;
-  padding: 18px 0 max(28px, env(safe-area-inset-bottom));
-}
-.card {
-  background: rgba(21, 21, 22, .96);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-.topbar {
-  min-height: 72px;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
-  background: rgba(18, 18, 19, .92);
-}
-.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-mark {
-  width: 42px; height: 42px; flex: 0 0 42px;
-  display: grid; place-items: center; border-radius: 11px;
-  background: var(--accent); color: #111; font-weight: 900; font-size: 12px; letter-spacing: .04em;
-}
-.brand-copy { min-width: 0; }
-h1, h2, h3, p { margin: 0; }
-h1 { font-size: 18px; line-height: 1.2; letter-spacing: -.02em; }
-h2 { font-size: 17px; line-height: 1.25; }
-h3 { font-size: 13px; }
-.brand p { margin-top: 3px; color: var(--muted); font-size: 12px; }
-.status-group { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
-.status-pill, .state-badge, .mode-badge, .muted, .mini-state {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 26px; padding: 4px 9px;
-  border: 1px solid var(--border-light); border-radius: 999px; font-size: 10px;
-  font-weight: 800; color: var(--muted); background: var(--surface-2);
-}
-.status-success { color: #eee; border-color: #5a5a5e; }
-.status-warn { color: #ddd; border-color: #55555a; }
-.mini-state.pink { color: #fff; background: #29292d; border-color: #66666d; }
-
-.scanner { padding: 16px; }
-.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.eyebrow { display: block; margin-bottom: 4px; color: #77777c; font-size: 9px; font-weight: 800; letter-spacing: .16em; }
-.scanner-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(290px, .8fr); gap: 14px; }
-
-.camera-container {
-  position: relative;
-  overflow: hidden;
-  aspect-ratio: 16 / 10;
-  min-height: 0;
-  background: #050505;
-  border: 1px solid #29292c;
-  border-radius: 12px;
-}
-#video, #canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-#video { background: #050505; }
-#canvas { pointer-events: none; }
-.overlay-msg {
-  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 10px; background: rgba(0,0,0,.58); color: #d5d5d5; text-align: center; padding: 20px;
-}
-.overlay-msg.hidden { display: none; }
-.overlay-spinner { width: 24px; height: 24px; border: 2px solid #4a4a4d; border-top-color: #eee; border-radius: 50%; animation: spin .8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.camera-controls { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin-top: 12px; }
-.camera-select { display: grid; gap: 5px; }
-.camera-select label, .range-label { font-size: 10px; color: var(--muted); font-weight: 700; }
-select {
-  min-width: 125px; min-height: var(--touch); padding: 9px 11px;
-  border: 1px solid var(--border-light); border-radius: 9px;
-  background: var(--surface-2); color: var(--text); outline: none;
-}
-.button-row { display: flex; gap: 8px; }
-.btn {
-  min-height: var(--touch);
-  border: 1px solid var(--border-light); border-radius: 9px;
-  padding: 10px 14px; font-size: 11px; font-weight: 800;
-  transition: transform .15s ease, background .15s ease, border-color .15s ease;
-}
-.btn:hover:not(:disabled) { transform: translateY(-1px); }
-.btn:active:not(:disabled) { transform: translateY(0); }
-.btn-primary { background: var(--accent); color: #111; border-color: var(--accent); }
-.btn-secondary { background: var(--surface-3); color: var(--text); }
-.btn-success { background: #e5e5e5; color: #111; border-color: #e5e5e5; }
-.btn-ghost { background: transparent; color: var(--muted); }
-.full-width { width: 100%; }
-.hint { margin-top: 8px; color: #6f6f74; font-size: 10px; line-height: 1.5; }
-.hint.small { margin-top: 8px; }
-code { color: #c9c9cc; }
-
-.controls { border: 1px solid var(--border); border-radius: 11px; background: #111112; overflow: hidden; }
-.control-section { padding: 14px; border-bottom: 1px solid var(--border); }
-.control-section:last-child { border-bottom: 0; }
-.control-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-.range-label { display: block; margin: 12px 0 6px; }
-input[type="range"] { width: 100%; min-height: 24px; accent-color: #d8d8d8; }
-.range-scale { display: flex; justify-content: space-between; color: #66666b; font-size: 9px; }
-.target-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.target-option {
-  display: flex; align-items: center; gap: 7px; min-width: 0; min-height: 42px; padding: 8px;
-  border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); color: #bdbdc1; font-size: 10px;
-}
-.target-option input { width: 16px; height: 16px; flex: 0 0 auto; accent-color: #ddd; }
-.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 9px; background: #0b0b0c; }
-.segment { min-height: 38px; border: 0; border-radius: 6px; padding: 8px; color: #8d8d91; background: transparent; font-size: 10px; font-weight: 800; }
-.segment.active { background: #e5e5e5; color: #111; }
-
-.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
-.stat { padding: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.stat span { color: var(--muted); font-size: 10px; }
-.stat strong { font-size: 22px; letter-spacing: -.03em; }
-
-.logs-section, .quick-info { padding: 16px; }
-.header-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
-.mode-badge { color: #ddd; }
-.data-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; color: var(--muted); font-size: 10px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.sync-indicator { white-space: nowrap; }
-.sync-indicator i { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #5d5d62; }
-.sync-indicator.live i { background: #bdbdbd; }
-.data-list { margin-top: 10px; display: grid; gap: 7px; max-height: 360px; overflow: auto; overscroll-behavior: contain; }
-.empty-state { display: grid; gap: 5px; padding: 30px 12px; text-align: center; color: var(--muted); }
-.empty-state strong { color: #ddd; font-size: 12px; }
-.empty-state span { font-size: 10px; }
-.log-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-2); }
-.log-time { color: #77777c; font-size: 9px; margin-bottom: 4px; }
-.log-items { color: #ddd; font-size: 11px; font-weight: 700; line-height: 1.4; }
-.log-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-.log-tag { padding: 3px 6px; border: 1px solid var(--border-light); border-radius: 999px; color: #85858a; font-size: 8px; }
-.log-count-badge { flex: 0 0 auto; padding: 6px 8px; border-radius: 7px; background: #2a2a2d; color: #ddd; font-size: 9px; font-weight: 800; }
-
-.quick-info { margin-top: 12px; }
-.flow-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 12px; }
-.flow-grid span { padding: 10px 7px; text-align: center; border: 1px solid var(--border); border-radius: 8px; color: #99999e; background: var(--surface-2); font-size: 9px; font-weight: 700; }
-footer { padding: 18px 0 4px; text-align: center; color: #5e5e63; font-size: 9px; }
-
-@media (max-width: 900px) {
-  .scanner-grid { grid-template-columns: 1fr; }
-  .camera-container { aspect-ratio: 16 / 9; }
-  .flow-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 650px) {
-  body { background: var(--bg); }
-  .app-shell { width: 100%; padding: max(8px, env(safe-area-inset-top)) 8px max(18px, env(safe-area-inset-bottom)); }
-  .topbar { align-items: stretch; flex-direction: column; gap: 12px; padding: 12px; margin-bottom: 10px; }
-  .brand { align-items: center; }
-  .brand-mark { width: 40px; height: 40px; flex-basis: 40px; }
-  h1 { font-size: 16px; }
-  .brand p { font-size: 11px; }
-  .status-group { justify-content: flex-start; }
-  .status-pill { flex: 1 1 auto; text-align: center; }
-  .scanner, .logs-section, .quick-info { padding: 12px; }
-  .scanner { border-radius: 12px; }
-  .section-head { align-items: flex-start; }
-  .scanner-grid { gap: 10px; }
-  .camera-container { aspect-ratio: 4 / 3; border-radius: 10px; }
-  .camera-controls { align-items: stretch; flex-direction: column; gap: 10px; }
-  .camera-select, .camera-select select { width: 100%; }
-  .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .button-row .btn { width: 100%; }
-  .hint { font-size: 9px; }
-  .controls { border-radius: 10px; }
-  .control-section { padding: 12px; }
-  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 10px 0; }
-  .stat { min-height: 68px; padding: 10px; display: grid; align-content: center; gap: 2px; }
-  .stat span { font-size: 9px; }
-  .stat strong { font-size: 19px; }
-  .data-summary, .section-head { align-items: flex-start; flex-direction: column; }
-  .data-summary { gap: 6px; }
-  .header-actions { width: 100%; justify-content: stretch; display: grid; grid-template-columns: auto 1fr 1fr; }
-  .header-actions .btn { width: 100%; }
-  .data-list { max-height: 420px; }
-  .log-item { align-items: flex-start; }
-}
-
-@media (max-width: 430px) {
-  .target-list { grid-template-columns: 1fr 1fr; }
-  .target-option { font-size: 9px; padding: 7px; }
-  .button-row { grid-template-columns: 1fr; }
-  .button-row .btn { min-height: 48px; }
-  .header-actions { grid-template-columns: 1fr 1fr; }
-  .header-actions .mode-badge { grid-column: 1 / -1; justify-self: start; }
-  .log-item { gap: 8px; }
-  .log-items { font-size: 10px; }
-  .flow-grid { grid-template-columns: 1fr 1fr; }
-}
-
-@media (max-width: 360px) {
-  .app-shell { padding-left: 6px; padding-right: 6px; }
-  .status-group { display: grid; grid-template-columns: 1fr 1fr; }
-  .stats-grid { gap: 5px; }
-  .stat { padding: 8px; }
-  .stat strong { font-size: 17px; }
-  .target-option { min-height: 40px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-}
-
-
-/* Mobile fullscreen presentation */
-@media (max-width: 767px) {
-  html { width:100%; min-height:100%; background:#0b1220; overscroll-behavior:none; }
-  body {
-    width:100%; min-height:100dvh; min-height:100svh; margin:0; overflow-x:hidden;
-    background:#0b1220; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    overscroll-behavior-y:contain;
-  }
-  .app, .container, main { width:100%; max-width:none !important; box-sizing:border-box; }
-  .app { min-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
-  .container { padding-left:12px !important; padding-right:12px !important; }
-  .camera-card, .camera-container, .camera-wrapper { width:100%; margin-left:0; margin-right:0; }
-  video, canvas { display:block; width:100%; max-width:100%; object-fit:cover; }
-  button, .btn, input, select { min-height:46px; }
-  button, .btn { touch-action:manipulation; }
-  .controls, .control-row, .action-row, .button-row { width:100%; gap:8px; }
-  .controls > *, .control-row > *, .action-row > *, .button-row > * { min-width:0; }
-  .card, .panel, .section, .camera-card, .stats-card { box-sizing:border-box; border-radius:14px; }
-  .detection-log, .log-container, .log-list { max-height:30dvh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-  .card *, .panel *, .section * { overflow-wrap:anywhere; }
-  header, .header { padding-top:8px !important; padding-bottom:8px !important; }
-  .desktop-only { display:none !important; }
-}
-@media (max-width:390px) {
-  .container { padding-left:8px !important; padding-right:8px !important; }
-  button, .btn { min-height:44px; }
-}
-@media (max-width:900px) and (orientation:landscape) {
-  body { min-height:100dvh; }
-  .camera-card, .camera-container, .camera-wrapper, video, canvas { max-height:calc(100dvh - 24px); }
-}
-@media (prefers-reduced-motion:reduce) {
-  *, *::before, *::after { scroll-behavior:auto !important; transition-duration:.01ms !important; animation-duration:.01ms !important; }
-}
-
-</style>
-<style>
-
-/* =========================================================
-   MOBILE FULLSCREEN MODE - SINGLE FILE BUILD
-   ========================================================= */
-@media (max-width: 767px) {
-  html { width:100%; min-height:100%; background:#0b1220; overscroll-behavior:none; }
-  body {
-    width:100%; min-height:100dvh; min-height:100svh; margin:0;
-    overflow-x:hidden; overscroll-behavior-y:contain; background:#0b1220;
-    padding:env(safe-area-inset-top) env(safe-area-inset-right)
-             env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-  .app, .container, main { width:100%; max-width:none !important; box-sizing:border-box; }
-  .app { min-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
-  .container { padding-left:12px !important; padding-right:12px !important; }
-  video, canvas { display:block; width:100%; max-width:100%; object-fit:cover; }
-  button, .btn, input, select { min-height:46px; }
-  button, .btn { touch-action:manipulation; }
-  .card, .panel, .section, .camera-card, .stats-card { box-sizing:border-box; }
-  .detection-log, .log-container, .log-list {
-    max-height:30dvh; overflow-y:auto; -webkit-overflow-scrolling:touch;
-  }
-  .card *, .panel *, .section * { overflow-wrap:anywhere; }
-  header, .header { padding-top:8px !important; padding-bottom:8px !important; }
-  .desktop-only { display:none !important; }
-}
-@media (max-width:390px) {
-  .container { padding-left:8px !important; padding-right:8px !important; }
-  button, .btn { min-height:44px; }
-}
-@media (max-width:900px) and (orientation:landscape) {
-  body { min-height:100dvh; }
-  video, canvas { max-height:calc(100dvh - 24px); }
-}
-@media (prefers-reduced-motion:reduce) {
-  *, *::before, *::after {
-    scroll-behavior:auto !important; transition-duration:.01ms !important;
-    animation-duration:.01ms !important;
-  }
-}
-
-</style>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
 
 <style>
-/* =========================================================
-   INSTAGRAM-LIKE MOBILE CAMERA UI
-   Full viewport camera + floating right-side controls
-   ========================================================= */
-@media (max-width: 767px) {
-  :root {
-    --mobile-black: #050505;
-    --mobile-white: #ffffff;
-    --mobile-glass: rgba(15, 15, 16, .48);
-    --mobile-pink: #ec4899;
-  }
+*{box-sizing:border-box}
+html,body{
+  margin:0;width:100%;height:100%;
+  background:#000;color:#fff;
+  font-family:system-ui,sans-serif
+}
+button{border:0;cursor:pointer}
 
-  html, body {
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
-    margin: 0;
-    background: var(--mobile-black);
-    overflow: hidden;
-  }
-
-  body {
-    min-height: 100dvh;
-    min-height: 100svh;
-    padding: 0 !important;
-    overscroll-behavior: none;
-  }
-
-  .app-shell {
-    width: 100%;
-    height: 100dvh;
-    min-height: 100svh;
-    margin: 0;
-    padding: 0 !important;
-    background: #000;
-  }
-
-  .topbar,
-  .scanner > .section-head,
-  .camera-controls,
-  .scanner > .scanner-grid > aside,
-  .stats-grid,
-  .logs-section,
-  .quick-info,
-  footer {
-    display: none !important;
-  }
-
-  main,
-  .scanner,
-  .scanner-grid,
-  .scanner-grid > div {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    margin: 0;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: #000 !important;
-    box-shadow: none !important;
-  }
-
-  .scanner-grid {
-    display: block;
-  }
-
-  .camera-container {
-    position: fixed;
-    inset: 0;
-    width: 100vw !important;
-    height: 100dvh !important;
-    min-height: 100svh !important;
-    max-height: none !important;
-    margin: 0 !important;
-    padding: 0;
-    border: 0 !important;
-    border-radius: 0 !important;
-    aspect-ratio: auto !important;
-    overflow: hidden;
-    background: #000;
-    z-index: 1;
-  }
-
-  #video,
-  #canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  #video {
-    background: #000;
-  }
-
-  #canvas {
-    z-index: 4;
-  }
-
-  /* Cinematic gradients make white controls readable over any camera image. */
-  .camera-container::before,
-  .camera-container::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    z-index: 5;
-    pointer-events: none;
-  }
-
-  .camera-container::before {
-    top: 0;
-    height: 145px;
-    background: linear-gradient(to bottom, rgba(0,0,0,.62), transparent);
-  }
-
-  .camera-container::after {
-    bottom: 0;
-    height: 220px;
-    background: linear-gradient(to top, rgba(0,0,0,.72), transparent);
-  }
-
-  .mobile-camera-top {
-    position: absolute;
-    z-index: 8;
-    top: max(18px, env(safe-area-inset-top));
-    left: 16px;
-    right: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    pointer-events: none;
-    color: #fff;
-  }
-
-  .mobile-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    padding: 7px 11px 7px 7px;
-    border-radius: 999px;
-    background: rgba(0,0,0,.28);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: -.01em;
-  }
-
-  .mobile-brand-icon {
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #fff;
-    color: #111;
-    font-size: 9px;
-    font-weight: 950;
-  }
-
-  .mobile-status {
-    padding: 7px 11px;
-    border: 1px solid rgba(255,255,255,.18);
-    border-radius: 999px;
-    background: rgba(0,0,0,.28);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    color: rgba(255,255,255,.82);
-    font-size: 10px;
-    font-weight: 900;
-  }
-
-  .mobile-status.active {
-    color: #fff;
-    border-color: rgba(236,72,153,.75);
-    background: rgba(236,72,153,.24);
-  }
-
-  .mobile-camera-actions {
-    position: absolute;
-    z-index: 9;
-    top: 50%;
-    right: 12px;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .mobile-action {
-    width: 58px;
-    min-width: 58px;
-    height: 66px;
-    min-height: 66px;
-    padding: 7px 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border: 1px solid rgba(255,255,255,.20);
-    border-radius: 18px;
-    color: #fff;
-    background: rgba(0,0,0,.34);
-    box-shadow: 0 7px 22px rgba(0,0,0,.22);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    font-size: 9px;
-    font-weight: 800;
-    transition: transform .18s ease, background .18s ease, border-color .18s ease;
-  }
-
-  .mobile-action:active {
-    transform: scale(.93);
-  }
-
-  .mobile-action:disabled {
-    opacity: .35;
-  }
-
-  .mobile-action.active {
-    border-color: rgba(236,72,153,.9);
-    background: rgba(236,72,153,.30);
-  }
-
-  .mobile-action-icon {
-    width: 30px;
-    height: 30px;
-    display: grid;
-    place-items: center;
-    color: #fff;
-    font-size: 22px;
-    line-height: 1;
-    font-weight: 800;
-  }
-
-  .mobile-action-ai .mobile-action-icon {
-    border: 1.5px solid rgba(255,255,255,.85);
-    border-radius: 9px;
-    font-size: 10px;
-  }
-
-  .mobile-camera-hint {
-    position: absolute;
-    z-index: 8;
-    left: 24px;
-    right: 92px;
-    bottom: calc(105px + env(safe-area-inset-bottom));
-    display: grid;
-    gap: 5px;
-    color: #fff;
-    text-shadow: 0 2px 12px rgba(0,0,0,.5);
-    pointer-events: none;
-  }
-
-  .mobile-camera-hint strong {
-    font-size: 18px;
-    letter-spacing: -.02em;
-  }
-
-  .mobile-camera-hint span {
-    color: rgba(255,255,255,.78);
-    font-size: 11px;
-  }
-
-  .mobile-camera-hint.hidden {
-    display: none;
-  }
-
-  .mobile-start-camera {
-    position: absolute;
-    z-index: 10;
-    left: 50%;
-    bottom: calc(34px + env(safe-area-inset-bottom));
-    transform: translateX(-50%);
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    min-height: 52px;
-    padding: 0 19px;
-    border: 1px solid rgba(255,255,255,.28);
-    border-radius: 999px;
-    color: #111;
-    background: #fff;
-    box-shadow: 0 10px 30px rgba(0,0,0,.28);
-    font-size: 12px;
-    font-weight: 900;
-  }
-
-  .mobile-start-camera:active {
-    transform: translateX(-50%) scale(.96);
-  }
-
-  .mobile-start-camera.hidden {
-    display: none;
-  }
-
-  .mobile-start-icon {
-    width: 18px;
-    height: 18px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #111;
-    color: #fff;
-    font-size: 9px;
-  }
-
-  .mobile-bottom-bar {
-    position: absolute;
-    z-index: 8;
-    left: 16px;
-    right: 82px;
-    bottom: max(18px, env(safe-area-inset-bottom));
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 12px;
-    color: #fff;
-    pointer-events: none;
-  }
-
-  .mobile-bottom-bar > div {
-    display: grid;
-    gap: 2px;
-  }
-
-  .mobile-bottom-label {
-    color: rgba(255,255,255,.56);
-    font-size: 8px;
-    font-weight: 900;
-    letter-spacing: .14em;
-  }
-
-  #mobileDetectionCount {
-    font-size: 13px;
-    font-weight: 850;
-  }
-
-  .mobile-bottom-target {
-    display: flex !important;
-    align-items: center;
-    gap: 6px;
-    color: rgba(255,255,255,.78);
-    font-size: 10px;
-    font-weight: 700;
-  }
-
-  .mobile-live-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #777;
-    box-shadow: 0 0 0 4px rgba(255,255,255,.08);
-  }
-
-  /* Overlay remains above the camera but below the controls. */
-  .overlay-msg {
-    z-index: 7;
-    background: rgba(0,0,0,.42);
-    padding: 28px 100px 150px 24px;
-    color: rgba(255,255,255,.9);
-    pointer-events: none;
-  }
-
-  .overlay-msg p {
-    max-width: 260px;
-    font-size: 11px;
-  }
-
-  /* Mobile uses the existing desktop start button only as a JS state anchor. */
-  #startCameraBtn,
-  #stopCameraBtn,
-  #facingMode {
-    display: none !important;
-  }
+.camera{
+  position:fixed;inset:0;
+  overflow:hidden;background:#000
 }
 
-/* Landscape mobile */
-@media (max-width: 900px) and (orientation: landscape) {
-  .mobile-camera-actions {
-    top: 50%;
-    right: 10px;
-    gap: 8px;
-  }
+video,canvas{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover
+}
 
-  .mobile-action {
-    width: 52px;
-    min-width: 52px;
-    height: 58px;
-    min-height: 58px;
-  }
+canvas{pointer-events:none}
 
-  .mobile-camera-hint {
-    bottom: 30px;
-  }
+.shade{
+  position:absolute;inset:0;
+  pointer-events:none;
+  background:linear-gradient(
+    #0009,transparent 25%,
+    transparent 65%,#000b
+  )
+}
 
-  .mobile-bottom-bar {
-    bottom: 14px;
-  }
+.top{
+  position:absolute;
+  z-index:3;
+  top:max(18px,env(safe-area-inset-top));
+  left:16px;right:16px;
+  display:flex;
+  justify-content:space-between
+}
+
+.brand,.status,.action,.permission,.panel,.logs{
+  background:#0008;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px)
+}
+
+.brand,.status{
+  padding:8px 12px;
+  border-radius:99px;
+  font-weight:800
+}
+
+.brand{font-size:14px}
+.status{font-size:10px}
+
+.actions{
+  position:absolute;
+  z-index:3;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  display:grid;
+  gap:10px
+}
+
+.action{
+  width:58px;
+  height:64px;
+  border:1px solid #fff3;
+  border-radius:17px;
+  color:#fff;
+  font-weight:800;
+  font-size:9px
+}
+
+.action b{
+  display:block;
+  font-size:21px;
+  margin-bottom:3px
+}
+
+.action.on{
+  background:#ec489955;
+  border-color:#ec4899
+}
+
+.bottom{
+  position:absolute;
+  z-index:3;
+  left:18px;
+  right:86px;
+  bottom:max(18px,env(safe-area-inset-bottom));
+  font-size:11px
+}
+
+.bottom strong{
+  display:block;
+  font-size:15px;
+  margin:3px 0
+}
+
+.live{color:#ddd}
+
+.start{
+  position:absolute;
+  z-index:4;
+  left:50%;
+  bottom:34px;
+  transform:translateX(-50%);
+  padding:15px 22px;
+  border-radius:99px;
+  background:#fff;
+  color:#111;
+  font-weight:900
+}
+
+.hidden{display:none!important}
+
+.permission-wrap{
+  position:fixed;
+  z-index:99;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:22px;
+  background:#000e
+}
+
+.permission-wrap.hide{display:none}
+
+.permission{
+  width:min(360px,100%);
+  padding:26px 20px;
+  border:1px solid #fff2;
+  border-radius:24px;
+  text-align:center
+}
+
+.permission-icon{font-size:38px}
+
+.permission h2{
+  margin:10px 0 8px
+}
+
+.permission p{
+  color:#bbb;
+  font-size:13px;
+  line-height:1.5
+}
+
+.permission button{
+  width:100%;
+  padding:15px;
+  border-radius:14px;
+  font-weight:900
+}
+
+.error{
+  color:#ff9aaa!important;
+  font-size:11px!important
+}
+
+.panel{
+  position:fixed;
+  z-index:10;
+  left:12px;
+  right:82px;
+  bottom:100px;
+  padding:10px;
+  border-radius:16px;
+  font-size:10px
+}
+
+.panel input{width:100%}
+
+.panel .row{
+  display:flex;
+  gap:7px;
+  align-items:center
+}
+
+.panel button{
+  padding:9px 12px;
+  border-radius:10px;
+  background:#fff;
+  color:#111;
+  font-weight:800
+}
+
+.logs{
+  position:fixed;
+  z-index:11;
+  left:12px;
+  right:82px;
+  top:80px;
+  max-height:30vh;
+  overflow:auto;
+  padding:8px;
+  border-radius:14px;
+  font-size:10px
+}
+
+.log{
+  padding:7px;
+  border-bottom:1px solid #fff2
 }
 </style>
-
-
-<style>
-.camera-permission-gate{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 50% 25%,rgba(236,72,153,.20),transparent 34%),rgba(0,0,0,.94);color:#fff;text-align:center}
-.camera-permission-gate.show{display:flex}
-.camera-permission-card{width:min(360px,100%);padding:28px 22px 24px;border:1px solid rgba(255,255,255,.14);border-radius:28px;background:rgba(20,20,22,.88);box-shadow:0 24px 70px rgba(0,0,0,.5);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.camera-permission-icon{width:76px;height:76px;margin:0 auto 18px;display:grid;place-items:center;border-radius:24px;background:#fff;color:#111;font-size:34px}
-.camera-permission-card h2{margin:0 0 9px;font-size:22px}
-.camera-permission-card p{margin:0 auto 20px;max-width:290px;color:rgba(255,255,255,.68);font-size:13px;line-height:1.55}
-.camera-permission-btn{width:100%;min-height:50px;border:0;border-radius:16px;background:#fff;color:#111;font-size:14px;font-weight:900}
-.camera-permission-error,.camera-permission-help{display:none!important;margin-top:13px!important;font-size:11px!important}
-.camera-permission-error.show,.camera-permission-help.show{display:block!important}
-.camera-permission-error.show{color:#ff9aaa!important}
-</style>
-
 </head>
+
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">AI</div>
-        <div class="brand-copy">
-          <h1>AI Object Scanner</h1>
-          <p>Deteksi objek real-time dari kamera.</p>
-        </div>
-      </div>
-      <div class="status-group">
-        <span id="modelStatus" class="status-pill status-neutral">Model belum dimuat</span>
-        <span id="dbStatus" class="status-pill status-neutral">DB: Mock Mode</span>
-      </div>
-    </header>
 
-    <main>
-      <section class="scanner card">
-        <div class="section-head">
-          <div>
-            <span class="eyebrow">SCANNER</span>
-            <h2>Kamera</h2>
-          </div>
-          <span id="aiState" class="state-badge">AI OFF</span>
-        </div>
+<div class="camera">
 
-        <div class="scanner-grid">
-          <div>
-            <div id="cameraContainer" class="camera-container">
-              <video id="video" autoplay playsinline muted></video>
-              <canvas id="canvas"></canvas>
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+  <div class="shade"></div>
 
-              <div class="mobile-camera-top">
-                <div class="mobile-brand">
-                  <span class="mobile-brand-icon">AI</span>
-                  <span>AI Camera</span>
-                </div>
-                <span id="mobileAiStatus" class="mobile-status">AI OFF</span>
-              </div>
-
-              <div class="mobile-camera-actions" aria-label="Kontrol kamera">
-                <button id="mobileSwitchCameraBtn" class="mobile-action" type="button" aria-label="Ganti kamera" title="Ganti kamera">
-                  <span class="mobile-action-icon">↻</span>
-                  <span>Switch</span>
-                </button>
-                <button id="mobileFlashBtn" class="mobile-action" type="button" aria-label="Nyalakan flash" title="Flash">
-                  <span class="mobile-action-icon">⚡</span>
-                  <span>Flash</span>
-                </button>
-                <button id="mobileAiBtn" class="mobile-action mobile-action-ai" type="button" aria-label="Nyalakan AI" title="AI">
-                  <span class="mobile-action-icon">AI</span>
-                  <span>AI</span>
-                </button>
-              </div>
-
-              <div id="mobileCameraHint" class="mobile-camera-hint">
-                <strong>AI Object Scanner</strong>
-                <span>Deteksi objek secara real-time</span>
-              </div>
-
-              <button id="mobileStartCameraBtn" class="mobile-start-camera" type="button">
-                <span class="mobile-start-icon">●</span>
-                <span>Buka Kamera</span>
-              </button>
-
-              <div class="mobile-bottom-bar">
-                <div>
-                  <span class="mobile-bottom-label">DETEKSI</span>
-                  <strong id="mobileDetectionCount">0 objek</strong>
-                </div>
-                <div class="mobile-bottom-target">
-                  <span class="mobile-live-dot"></span>
-                  <span id="mobileCameraState">Kamera OFF</span>
-                </div>
-              </div>
-
-              <div id="overlayMsg" class="overlay-msg">
-                <div class="overlay-spinner"></div>
-                <p id="overlayText">Klik Start Camera untuk memulai.</p>
-              </div>
-            </div>
-
-            <div class="camera-controls">
-              <div class="camera-select">
-                <label for="facingMode">Kamera</label>
-                <select id="facingMode">
-                  <option value="environment">Belakang</option>
-                  <option value="user">Depan</option>
-                </select>
-              </div>
-              <div class="button-row">
-                <button id="startCameraBtn" class="btn btn-primary">Start Camera</button>
-                <button id="stopCameraBtn" class="btn btn-secondary" disabled>Stop</button>
-              </div>
-            </div>
-            <p class="hint">Gunakan HTTPS atau localhost agar kamera dapat diakses browser.</p>
-          </div>
-
-          <aside class="controls">
-            <div class="control-section">
-              <div class="control-title">
-                <h3>AI Detection</h3>
-                <span id="confidenceValue">60%</span>
-              </div>
-              <button id="loadModelBtn" class="btn btn-secondary full-width">Muat Model AI</button>
-              <button id="toggleAiBtn" class="btn btn-primary full-width" disabled>Start AI</button>
-
-              <label class="range-label" for="confidenceRange">Confidence threshold</label>
-              <input id="confidenceRange" type="range" min="30" max="90" step="5" value="60" />
-              <div class="range-scale"><span>30%</span><span>60%</span><span>90%</span></div>
-            </div>
-
-            <div class="control-section">
-              <div class="control-title">
-                <h3>Target</h3>
-                <span class="muted">7 kelas</span>
-              </div>
-              <div id="targetClasses" class="target-list"></div>
-            </div>
-
-            <div class="control-section">
-              <div class="control-title">
-                <h3>Database</h3>
-                <span class="muted">Mock / Firebase</span>
-              </div>
-              <div class="segmented" role="group" aria-label="Mode database">
-                <button class="segment active" data-db-mode="mock">Mock</button>
-                <button class="segment" data-db-mode="firebase">Firebase</button>
-              </div>
-              <p class="hint small">Firebase digunakan jika konfigurasi di <code>app.js</code> sudah diisi.</p>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <section class="stats-grid">
-        <div class="stat card"><span>Objek terdeteksi</span><strong id="detectionCount">0</strong></div>
-        <div class="stat card"><span>Kamera</span><strong id="cameraStatus">OFF</strong></div>
-        <div class="stat card"><span>Log</span><strong id="logCount">0</strong></div>
-      </section>
-
-      <section class="card logs-section">
-        <div class="section-head">
-          <div>
-            <span class="eyebrow">LOG</span>
-            <h2>Detection Log</h2>
-          </div>
-          <div class="header-actions">
-            <span id="logModeBadge" class="mode-badge">MOCK</span>
-            <button id="exportBtn" class="btn btn-secondary">Export CSV</button>
-            <button id="clearLogsBtn" class="btn btn-ghost">Clear</button>
-          </div>
-        </div>
-
-        <div class="data-summary">
-          <span>Riwayat deteksi tersimpan otomatis.</span>
-          <span id="syncIndicator" class="sync-indicator"><i></i> Menunggu data</span>
-        </div>
-
-        <div id="dataList" class="data-list">
-          <div class="empty-state">
-            <strong>Belum ada data</strong>
-            <span>Start Camera → Muat Model → Start AI</span>
-          </div>
-        </div>
-      </section>
-    </main>
+  <div class="top">
+    <div class="brand">AI Camera</div>
+    <div id="status" class="status">Kamera OFF</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
-  <script type="module">
+  <div class="actions">
+
+    <button id="switch" class="action">
+      <b>↻</b>
+      Switch
+    </button>
+
+    <button id="flash" class="action">
+      <b>⚡</b>
+      Flash
+    </button>
+
+    <button id="ai" class="action">
+      <b>AI</b>
+      AI
+    </button>
+
+  </div>
+
+  <div class="bottom">
+
+    <span class="live">DETEKSI</span>
+
+    <strong id="count">
+      0 objek
+    </strong>
+
+    <span id="hint">
+      Izinkan kamera lalu tekan AI.
+    </span>
+
+  </div>
+
+  <button id="start" class="start">
+    ● Buka Kamera
+  </button>
+
+</div>
 
 
-/* ===== CAMERA PERMISSION FLOW ===== */
-const permissionGate = document.getElementById("cameraPermissionGate");
-const permissionButton = document.getElementById("permissionButton");
-const permissionError = document.getElementById("permissionError");
-const permissionHelp = document.getElementById("permissionHelp");
-const permissionTitle = document.getElementById("permissionTitle");
-const permissionDescription = document.getElementById("permissionDescription");
+<div id="permission" class="permission-wrap">
 
-function cameraContextIsSecure() {
-  return window.isSecureContext ||
-    location.hostname === "localhost" ||
-    location.hostname === "127.0.0.1";
-}
+  <div class="permission">
 
-function showCameraPermissionGate(title, description) {
-  if (!permissionGate) return;
-  permissionTitle.textContent = title || "Akses Kamera Diperlukan";
-  permissionDescription.textContent = description || "Izinkan akses kamera untuk menggunakan AI Object Scanner.";
-  permissionError.textContent = "";
-  permissionError.classList.remove("show");
-  permissionHelp.classList.remove("show");
-  permissionGate.classList.add("show");
-  permissionGate.setAttribute("aria-hidden", "false");
-}
+    <div class="permission-icon">
+      📷
+    </div>
 
-function hideCameraPermissionGate() {
-  if (!permissionGate) return;
-  permissionGate.classList.remove("show");
-  permissionGate.setAttribute("aria-hidden", "true");
-}
+    <h2>
+      Akses Kamera
+    </h2>
 
-function showCameraPermissionError(message, help=false) {
-  permissionError.textContent = message;
-  permissionError.classList.add("show");
-  permissionHelp.classList.toggle("show", help);
-}
+    <p>
+      Izinkan kamera untuk menggunakan AI Object Scanner.
+    </p>
 
-async function requestCameraPermission() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    showCameraPermissionGate(
-      "Browser Tidak Mendukung",
-      "Browser ini tidak menyediakan akses kamera melalui web. Gunakan Chrome, Edge, Safari, atau browser modern."
-    );
-    showCameraPermissionError("Akses kamera membutuhkan browser modern dan koneksi HTTPS.", true);
-    return false;
-  }
+    <button id="allow">
+      Izinkan Kamera
+    </button>
 
-  if (!cameraContextIsSecure()) {
-    showCameraPermissionGate(
-      "Koneksi Aman Diperlukan",
-      "Browser hanya mengizinkan kamera pada HTTPS, localhost, atau secure context."
-    );
-    showCameraPermissionError("File HTML yang dibuka langsung sebagai file:// dapat ditolak browser.", true);
-    return false;
-  }
+    <p id="error" class="error"></p>
 
-  try {
-    const testStream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: false
-    });
-    testStream.getTracks().forEach(track => track.stop());
-    return true;
-  } catch (error) {
-    console.error("Camera permission error:", error);
+  </div>
 
-    if (error.name === "NotAllowedError" || error.name === "SecurityError") {
-      showCameraPermissionGate(
-        "Izin Kamera Ditolak",
-        "Izinkan kamera pada popup browser agar aplikasi dapat menggunakan scanner."
-      );
-      showCameraPermissionError("Akses kamera belum diizinkan.", true);
-    } else if (error.name === "NotFoundError") {
-      showCameraPermissionError("Kamera tidak ditemukan pada perangkat.");
-    } else if (error.name === "NotReadableError") {
-      showCameraPermissionError("Kamera sedang digunakan aplikasi lain. Tutup aplikasi tersebut lalu coba lagi.");
-    } else {
-      showCameraPermissionError("Kamera tidak dapat diakses: " + (error.message || error.name), true);
-    }
-    return false;
-  }
-}
+</div>
 
-async function startCameraWithPermission() {
-  const allowed = await requestCameraPermission();
-  if (!allowed) return;
-  hideCameraPermissionGate();
-  await startCamera();
-}
 
-permissionButton?.addEventListener("click", startCameraWithPermission);
+<div class="panel">
 
-/* ===== INLINED JS: app.js ===== */
+  <div class="row">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import {
-  collection,
-  getDocs,
-  getFirestore,
-  limit,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  addDoc
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+    <label>
+      Confidence
+      <b id="confText">60%</b>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC8diCoPA5K_HzjW8VUClpAzt_AJDqwUIg",
-  authDomain: "praktik-crud-243026027.firebaseapp.com",
-  projectId: "praktik-crud-243026027",
-  storageBucket: "praktik-crud-243026027.firebasestorage.app",
-  messagingSenderId: "345730836224",
-  appId: "1:345730836224:web:c927da0f574f9b1cbfb5e5"
-};
+      <input
+        id="conf"
+        type="range"
+        min="30"
+        max="90"
+        value="60"
+      >
+    </label>
 
-const LOG_COLLECTION = "detection_logs";
-const MOCK_STORAGE_KEY = "edge_ai_inventory_mock_logs";
-const DEVICE_STORAGE_KEY = "edge_ai_inventory_device_id";
-const SAVE_THROTTLE_MS = 3000;
-const MAX_VISIBLE_LOGS = 30;
+    <button id="load">
+      Muat Model AI
+    </button>
 
-const TARGET_CLASSES = [
+    <button id="export">
+      CSV
+    </button>
+
+  </div>
+
+</div>
+
+
+<div id="logs" class="logs"></div>
+
+
+<script>
+
+const $ = id => document.getElementById(id);
+
+const v = $("video");
+const c = $("canvas");
+const x = c.getContext("2d");
+
+
+const targets = [
   "mouse",
   "keyboard",
   "cell phone",
@@ -1064,791 +350,582 @@ const TARGET_CLASSES = [
   "person"
 ];
 
-const CLASS_LABELS = {
-  "mouse": "Mouse",
-  "keyboard": "Keyboard",
-  "cell phone": "HP / Cell Phone",
-  "book": "Buku",
-  "scissors": "Gunting",
-  "laptop": "Laptop",
-  "person": "Orang"
+
+const names = {
+  "mouse":"Mouse",
+  "keyboard":"Keyboard",
+  "cell phone":"HP",
+  "book":"Buku",
+  "scissors":"Gunting",
+  "laptop":"Laptop",
+  "person":"Orang"
 };
 
-const state = {
-  dbMode: "mock",
-  db: null,
-  firebaseEnabled: false,
-  unsubscribe: null,
-  mockListener: null,
-  stream: null,
-  model: null,
-  modelLoading: false,
-  isDetecting: false,
-  detectionBusy: false,
-  frameHandle: null,
-  cameraStarted: false,
-  torchOn: false,
-  lastSaveAt: 0,
-  selectedTargets: new Set(TARGET_CLASSES),
-  confidence: 0.60,
-  logs: []
+
+const S = {
+  stream:null,
+  model:null,
+  ai:false,
+  busy:false,
+  torch:false,
+  facing:"environment",
+  conf:.6,
+  logs:[]
 };
 
-const el = {
-  video: document.getElementById("video"),
-  canvas: document.getElementById("canvas"),
-  ctx: document.getElementById("canvas").getContext("2d"),
-  cameraContainer: document.getElementById("cameraContainer"),
-  overlayMsg: document.getElementById("overlayMsg"),
-  overlayText: document.getElementById("overlayText"),
-  startCameraBtn: document.getElementById("startCameraBtn"),
-  stopCameraBtn: document.getElementById("stopCameraBtn"),
-  facingMode: document.getElementById("facingMode"),
-  mobileSwitchCameraBtn: document.getElementById("mobileSwitchCameraBtn"),
-  mobileFlashBtn: document.getElementById("mobileFlashBtn"),
-  mobileAiBtn: document.getElementById("mobileAiBtn"),
-  mobileStartCameraBtn: document.getElementById("mobileStartCameraBtn"),
-  mobileAiStatus: document.getElementById("mobileAiStatus"),
-  mobileCameraHint: document.getElementById("mobileCameraHint"),
-  mobileDetectionCount: document.getElementById("mobileDetectionCount"),
-  mobileCameraState: document.getElementById("mobileCameraState"),
-  loadModelBtn: document.getElementById("loadModelBtn"),
-  toggleAiBtn: document.getElementById("toggleAiBtn"),
-  modelStatus: document.getElementById("modelStatus"),
-  dbStatus: document.getElementById("dbStatus"),
-  aiState: document.getElementById("aiState"),
-  confidenceRange: document.getElementById("confidenceRange"),
-  confidenceValue: document.getElementById("confidenceValue"),
-  targetClasses: document.getElementById("targetClasses"),
-  dataList: document.getElementById("dataList"),
-  detectionCount: document.getElementById("detectionCount"),
-  cameraStatus: document.getElementById("cameraStatus"),
-  logCount: document.getElementById("logCount"),
-  logModeBadge: document.getElementById("logModeBadge"),
-  syncIndicator: document.getElementById("syncIndicator"),
-  exportBtn: document.getElementById("exportBtn"),
-  clearLogsBtn: document.getElementById("clearLogsBtn")
-};
 
-function hasValidFirebaseConfig() {
-  const required = [
-    firebaseConfig.apiKey,
-    firebaseConfig.authDomain,
-    firebaseConfig.projectId,
-    firebaseConfig.storageBucket,
-    firebaseConfig.messagingSenderId,
-    firebaseConfig.appId
-  ];
+const secure = () =>
+  location.protocol === "https:" ||
+  ["localhost","127.0.0.1"].includes(location.hostname);
 
-  return required.every(Boolean)
-    && !firebaseConfig.apiKey.includes("PASTE_")
-    && !firebaseConfig.projectId.includes("PROJECT_ID_ANDA")
-    && !firebaseConfig.appId.includes("APP_ID_ANDA");
+
+function ui(){
+
+  $("status").textContent =
+    S.stream
+      ? (S.ai ? "AI ON" : "Kamera ON")
+      : "Kamera OFF";
+
+  $("ai").classList.toggle("on",S.ai);
+
+  $("flash").classList.toggle("on",S.torch);
+
+  $("start").classList.toggle(
+    "hidden",
+    !!S.stream
+  );
+
+  $("flash").disabled =
+    $("switch").disabled =
+    !S.stream;
 }
 
-function initFirebase() {
-  if (state.firebaseEnabled && state.db) return true;
-  if (!hasValidFirebaseConfig()) return false;
 
-  try {
-    const app = initializeApp(firebaseConfig);
-    state.db = getFirestore(app);
-    state.firebaseEnabled = true;
+function fail(message){
+  $("error").textContent = message;
+}
+
+
+async function permission(){
+
+  if(!navigator.mediaDevices?.getUserMedia){
+
+    fail("Browser tidak mendukung kamera.");
+
+    return false;
+  }
+
+  if(!secure()){
+
+    fail("Gunakan HTTPS atau localhost.");
+
+    return false;
+  }
+
+  try{
+
+    let stream =
+      await navigator.mediaDevices.getUserMedia({
+        video:true,
+        audio:false
+      });
+
+    stream
+      .getTracks()
+      .forEach(track => track.stop());
+
+    $("permission").classList.add("hide");
+
     return true;
-  } catch (error) {
-    console.error("Firebase init error:", error);
-    state.firebaseEnabled = false;
-    state.db = null;
+
+  }catch(error){
+
+    fail(
+      error.name === "NotAllowedError"
+        ? "Izin kamera ditolak. Aktifkan kamera di browser."
+        : "Kamera tidak dapat diakses."
+    );
+
     return false;
   }
 }
 
-function getDeviceId() {
-  let id = localStorage.getItem(DEVICE_STORAGE_KEY);
-  if (!id) {
-    id = `BROWSER-${crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(16).slice(2, 10)}`.toUpperCase();
-    localStorage.setItem(DEVICE_STORAGE_KEY, id);
-  }
-  return id;
-}
 
-function readMockLogs() {
-  try {
-    const data = JSON.parse(localStorage.getItem(MOCK_STORAGE_KEY) || "[]");
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error("Mock storage parse error:", error);
-    return [];
-  }
-}
+async function camera(){
 
-function writeMockLogs(logs) {
-  localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(logs));
-  window.dispatchEvent(new CustomEvent("edge-ai-mock-change"));
-}
+  stop();
 
-function getMockLogsSorted() {
-  return readMockLogs()
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-}
+  try{
 
-function mockListen(callback) {
-  const render = () => callback({ docs: getMockLogsSorted().slice(0, MAX_VISIBLE_LOGS) });
-  const handler = () => render();
-  window.addEventListener("edge-ai-mock-change", handler);
-  window.addEventListener("storage", handler);
-  render();
-  return () => {
-    window.removeEventListener("edge-ai-mock-change", handler);
-    window.removeEventListener("storage", handler);
-  };
-}
+    S.stream =
+      await navigator.mediaDevices.getUserMedia({
 
-function normalizeFirestoreTimestamp(value) {
-  if (!value) return null;
-  if (typeof value.toDate === "function") return value.toDate().toISOString();
-  if (value instanceof Date) return value.toISOString();
-  return String(value);
-}
+        video:{
+          facingMode:{
+            ideal:S.facing
+          },
 
-function normalizeLog(doc, firebaseDoc = true) {
-  const data = firebaseDoc && typeof doc.data === "function" ? doc.data() : doc;
-  return {
-    id: firebaseDoc ? doc.id : (data.id || crypto.randomUUID()),
-    items: Array.isArray(data.items) ? data.items : [],
-    itemsString: data.itemsString || (Array.isArray(data.items) ? data.items.join(", ") : "-"),
-    count: Number(data.count || 0),
-    deviceId: data.deviceId || "BROWSER-UNKNOWN",
-    timestamp: normalizeFirestoreTimestamp(data.timestamp) || data.timestamp || new Date().toISOString(),
-    mode: data.mode || (state.dbMode === "firebase" ? "firebase" : "mock")
-  };
-}
+          width:{
+            ideal:1280
+          },
 
-function closeDbListener() {
-  if (state.unsubscribe) {
-    state.unsubscribe();
-    state.unsubscribe = null;
-  }
-  if (state.mockListener) {
-    state.mockListener();
-    state.mockListener = null;
-  }
-}
+          height:{
+            ideal:720
+          }
+        },
 
-function listenToDatabase() {
-  closeDbListener();
-  setSyncIndicator("Menyinkronkan", true);
+        audio:false
 
-  if (state.dbMode === "firebase" && state.firebaseEnabled && state.db) {
-    const logsRef = collection(state.db, LOG_COLLECTION);
-    const logsQuery = query(logsRef, orderBy("timestamp", "desc"), limit(MAX_VISIBLE_LOGS));
+      });
 
-    state.unsubscribe = onSnapshot(
-      logsQuery,
-      (snapshot) => {
-        state.logs = snapshot.docs.map((doc) => normalizeLog(doc, true));
-        renderLogs();
-        setSyncIndicator("Firebase real-time", true);
-      },
-      (error) => {
-        console.error("Firestore listener error:", error);
-        setDbStatus("Firebase error", "warn");
-        setSyncIndicator("Firebase gagal, cek Rules", false);
-      }
+    v.srcObject = S.stream;
+
+    await v.play();
+
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+
+    ui();
+
+  }catch(error){
+
+    fail(
+      "Gagal membuka kamera: " +
+      error.message
     );
-    return;
+
+  }
+}
+
+
+function stop(){
+
+  S.ai = false;
+
+  if(S.stream){
+
+    S.stream
+      .getTracks()
+      .forEach(track => track.stop());
+
   }
 
-  state.mockListener = mockListen((snapshot) => {
-    state.logs = snapshot.docs.map((doc) => normalizeLog(doc, false));
-    renderLogs();
-    setSyncIndicator("Mock LocalStorage", true);
+  S.stream = null;
+
+  v.srcObject = null;
+
+  x.clearRect(
+    0,
+    0,
+    c.width,
+    c.height
+  );
+
+  ui();
+}
+
+
+async function loadModel(){
+
+  if(S.model) return;
+
+  $("load").textContent =
+    "Memuat...";
+
+  try{
+
+    await tf.ready();
+
+    S.model =
+      await cocoSsd.load({
+        base:"lite_mobilenet_v2"
+      });
+
+    $("load").textContent =
+      "Model Siap";
+
+    $("hint").textContent =
+      "Model siap. Tekan AI.";
+
+  }catch(error){
+
+    $("load").textContent =
+      "Muat Model AI";
+
+    $("hint").textContent =
+      "Model gagal dimuat.";
+
+  }
+}
+
+
+async function toggleAI(){
+
+  if(!S.stream){
+
+    if(!await permission())
+      return;
+
+    await camera();
+  }
+
+  if(!S.model)
+    await loadModel();
+
+  if(!S.model)
+    return;
+
+  S.ai = !S.ai;
+
+  ui();
+
+  $("hint").textContent =
+    S.ai
+      ? "Mendeteksi objek..."
+      : "AI dimatikan";
+
+  if(S.ai)
+    detect();
+}
+
+
+async function detect(){
+
+  if(
+    !S.ai ||
+    !S.stream ||
+    !S.model
+  )
+    return;
+
+  if(
+    !S.busy &&
+    v.readyState >= 2
+  ){
+
+    S.busy = true;
+
+    try{
+
+      let predictions =
+        await S.model.detect(v);
+
+      let detected =
+        predictions.filter(
+          item =>
+            targets.includes(item.class) &&
+            item.score >= S.conf
+        );
+
+      draw(predictions);
+
+      $("count").textContent =
+        detected.length +
+        " objek";
+
+      if(detected.length)
+        save(detected);
+
+    }finally{
+
+      S.busy = false;
+    }
+  }
+
+  requestAnimationFrame(
+    detect
+  );
+}
+
+
+function draw(list){
+
+  x.clearRect(
+    0,
+    0,
+    c.width,
+    c.height
+  );
+
+  let sx =
+    c.width /
+    v.videoWidth;
+
+  let sy =
+    c.height /
+    v.videoHeight;
+
+  list.forEach(item => {
+
+    let [
+      a,
+      b,
+      w,
+      h
+    ] = item.bbox;
+
+    let target =
+      targets.includes(
+        item.class
+      );
+
+    let good =
+      item.score >= S.conf;
+
+    x.strokeStyle =
+      target
+        ? "#ec4899"
+        : "#fff";
+
+    x.lineWidth =
+      good ? 3 : 1.5;
+
+    x.strokeRect(
+      a * sx,
+      b * sy,
+      w * sx,
+      h * sy
+    );
+
+    if(target && good){
+
+      let label =
+        `${names[item.class]} ` +
+        `${(item.score * 100).toFixed(0)}%`;
+
+      x.font =
+        "bold 14px system-ui";
+
+      let width =
+        x.measureText(label).width +
+        12;
+
+      let y =
+        Math.max(
+          b * sy - 24,
+          0
+        );
+
+      x.fillStyle =
+        "#ec4899";
+
+      x.fillRect(
+        a * sx,
+        y,
+        width,
+        24
+      );
+
+      x.fillStyle =
+        "#fff";
+
+      x.fillText(
+        label,
+        a * sx + 6,
+        y + 17
+      );
+    }
+
   });
 }
 
-async function saveToDatabase(detections) {
-  const now = Date.now();
-  if (now - state.lastSaveAt < SAVE_THROTTLE_MS) return false;
 
-  const items = detections.map((item) => ({
-    class: item.class,
-    label: CLASS_LABELS[item.class] || item.class,
-    confidence: Number((item.score * 100).toFixed(2))
-  }));
+function save(items){
 
-  const payload = {
-    items,
-    itemsString: items.map((item) => `${item.label} (${item.confidence}%)`).join(", "),
-    count: items.length,
-    deviceId: getDeviceId(),
-    mode: state.dbMode,
-    timestamp: state.dbMode === "firebase" ? serverTimestamp() : new Date().toISOString()
-  };
+  let now = Date.now();
 
-  try {
-    if (state.dbMode === "firebase" && state.firebaseEnabled && state.db) {
-      await addDoc(collection(state.db, LOG_COLLECTION), payload);
-    } else {
-      const current = readMockLogs();
-      current.push({ ...payload, id: crypto.randomUUID(), timestamp: new Date().toISOString() });
-      writeMockLogs(current.slice(-200));
-    }
-    state.lastSaveAt = now;
-    return true;
-  } catch (error) {
-    console.error("Gagal menyimpan ke database:", error);
-    setDbStatus("DB write error", "warn");
-    return false;
-  }
+  if(
+    save.last &&
+    now - save.last < 3000
+  )
+    return;
+
+  save.last = now;
+
+  S.logs.unshift({
+
+    time:
+      new Date()
+      .toLocaleString("id-ID"),
+
+    items:
+      items.map(
+        item =>
+          `${names[item.class]} ` +
+          `${(item.score * 100).toFixed(0)}%`
+      )
+
+  });
+
+  S.logs =
+    S.logs.slice(0,30);
+
+  localStorage.aiLogs =
+    JSON.stringify(S.logs);
+
+  renderLogs();
 }
 
-async function exportLogsAsCsv() {
-  let logs = [];
 
-  try {
-    if (state.dbMode === "firebase" && state.firebaseEnabled && state.db) {
-      const snapshot = await getDocs(collection(state.db, LOG_COLLECTION));
-      logs = snapshot.docs
-        .map((doc) => normalizeLog(doc, true))
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    } else {
-      logs = getMockLogsSorted();
-    }
+function renderLogs(){
 
-    if (!logs.length) {
-      alert("Belum ada log untuk diekspor.");
+  $("logs").innerHTML =
+    S.logs
+      .map(item => `
+        <div class="log">
+          ${item.time}<br>
+          ${item.items.join(", ")}
+        </div>
+      `)
+      .join("") ||
+      "Belum ada log";
+}
+
+
+function exportCSV(){
+
+  if(!S.logs.length){
+
+    alert("Belum ada log.");
+
+    return;
+  }
+
+  let csv =
+    "Waktu,Deteksi\n" +
+    S.logs
+      .map(item =>
+        `"${item.time}","${item.items.join("; ")}"`
+      )
+      .join("\n");
+
+  let a =
+    document.createElement("a");
+
+  a.href =
+    URL.createObjectURL(
+      new Blob(
+        ["\ufeff" + csv],
+        {
+          type:"text/csv"
+        }
+      )
+    );
+
+  a.download =
+    "detection-log.csv";
+
+  a.click();
+}
+
+
+$("allow").onclick =
+  async () => {
+
+    if(await permission())
+      camera();
+
+  };
+
+
+$("start").onclick =
+  async () => {
+
+    if(await permission())
+      camera();
+
+  };
+
+
+$("switch").onclick =
+  async () => {
+
+    S.facing =
+      S.facing === "environment"
+        ? "user"
+        : "environment";
+
+    S.torch = false;
+
+    await camera();
+
+  };
+
+
+$("flash").onclick =
+  async () => {
+
+    let track =
+      S.stream
+        ?.getVideoTracks()[0];
+
+    let capabilities =
+      track?.getCapabilities?.();
+
+    if(!capabilities?.torch){
+
+      alert(
+        "Flash tidak didukung."
+      );
+
       return;
     }
 
-    const rows = [
-      ["Waktu", "Items", "Jumlah", "Device ID", "Mode"],
-      ...logs.map((log) => [
-        formatDate(log.timestamp),
-        log.itemsString,
-        log.count,
-        log.deviceId,
-        log.mode
-      ])
-    ];
+    S.torch = !S.torch;
 
-    const csv = rows
-      .map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(","))
-      .join("\r\n");
+    try{
 
-    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `inventory-log-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Export error:", error);
-    alert("Gagal mengekspor log. Cek console browser.");
-  }
-}
+      await track.applyConstraints({
+        advanced:[
+          {
+            torch:S.torch
+          }
+        ]
+      });
 
-function clearMockLogs() {
-  if (state.dbMode !== "mock") {
-    alert("Tombol ini hanya menghapus log Mock/LocalStorage.");
-    return;
-  }
+    }catch{
 
-  if (!confirm("Hapus semua log Mock di browser ini?")) return;
-  localStorage.removeItem(MOCK_STORAGE_KEY);
-  window.dispatchEvent(new CustomEvent("edge-ai-mock-change"));
-}
+      S.torch = false;
 
-function setDbStatus(text, type = "neutral") {
-  el.dbStatus.textContent = `DB: ${text}`;
-  el.dbStatus.className = `status-pill status-${type}`;
-}
-
-function setModelStatus(text, type = "neutral") {
-  el.modelStatus.textContent = text;
-  el.modelStatus.className = `status-pill status-${type}`;
-}
-
-function setSyncIndicator(text, live = false) {
-  el.syncIndicator.innerHTML = `<i></i> ${escapeHtml(text)}`;
-  el.syncIndicator.classList.toggle("live", live);
-}
-
-function setOverlay(text, show = true) {
-  el.overlayText.textContent = text;
-  el.overlayMsg.classList.toggle("hidden", !show);
-}
-
-function renderTargetCheckboxes() {
-  el.targetClasses.innerHTML = TARGET_CLASSES.map((target) => {
-    const checked = state.selectedTargets.has(target) ? "checked" : "";
-    return `
-      <label class="target-option">
-        <input type="checkbox" value="${target}" ${checked} />
-        <span>${CLASS_LABELS[target] || target}</span>
-      </label>
-    `;
-  }).join("");
-
-  el.targetClasses.querySelectorAll("input").forEach((input) => {
-    input.addEventListener("change", () => {
-      if (input.checked) state.selectedTargets.add(input.value);
-      else state.selectedTargets.delete(input.value);
-      if (state.selectedTargets.size === 0) {
-        input.checked = true;
-        state.selectedTargets.add(input.value);
-        alert("Minimal pilih satu kelas target.");
-      }
-    });
-  });
-}
-
-function renderLogs() {
-  el.logCount.textContent = String(state.logs.length);
-
-  if (!state.logs.length) {
-    el.dataList.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-emoji"></div>
-        <strong>Belum ada objek terdeteksi</strong>
-        <span>Start Camera → Muat Model → Start AI</span>
-      </div>
-    `;
-    return;
-  }
-
-  el.dataList.innerHTML = state.logs.map((log) => {
-    const labels = (log.items || []).map((item) => item.label || item.class || "Unknown");
-    const uniqueLabels = [...new Set(labels)];
-    return `
-      <article class="log-item">
-        <div>
-          <div class="log-time">${escapeHtml(formatDate(log.timestamp))}</div>
-          <div class="log-items">${escapeHtml(log.itemsString || "- ")}</div>
-          <div class="log-meta">
-            ${uniqueLabels.slice(0, 7).map((label) => `<span class="log-tag">${escapeHtml(label)}</span>`).join("")}
-            <span class="log-tag">${escapeHtml(log.deviceId)}</span>
-          </div>
-        </div>
-        <div class="log-count-badge">${Number(log.count || 0)} obj</div>
-      </article>
-    `;
-  }).join("");
-}
-
-function formatDate(value) {
-  if (!value) return "-";
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat("id-ID", {
-    dateStyle: "short",
-    timeStyle: "medium"
-  }).format(date);
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function syncCanvasSize() {
-  if (!el.video.videoWidth || !el.video.videoHeight) return;
-  updateMobileCameraUi();
-  el.canvas.width = el.video.videoWidth;
-  el.canvas.height = el.video.videoHeight;
-}
-
-
-function isMobileCameraUi() {
-  return window.matchMedia("(max-width: 767px)").matches;
-}
-
-function updateMobileCameraUi() {
-  if (!el.mobileCameraState) return;
-
-  el.mobileCameraState.textContent = state.cameraStarted
-    ? (state.isDetecting ? "AI aktif" : "Kamera ON")
-    : "Kamera OFF";
-
-  el.mobileAiStatus.textContent = state.isDetecting ? "AI ON" : "AI OFF";
-  el.mobileAiStatus.classList.toggle("active", state.isDetecting);
-  el.mobileAiBtn.classList.toggle("active", state.isDetecting);
-  el.mobileFlashBtn.classList.toggle("active", state.torchOn);
-  el.mobileFlashBtn.disabled = !state.cameraStarted;
-  el.mobileSwitchCameraBtn.disabled = !state.cameraStarted;
-  el.mobileStartCameraBtn.classList.toggle("hidden", state.cameraStarted);
-
-  if (state.cameraStarted) {
-    el.mobileCameraHint.classList.add("hidden");
-  } else {
-    el.mobileCameraHint.classList.remove("hidden");
-  }
-}
-
-async function toggleTorch() {
-  if (!state.stream) return;
-
-  const track = state.stream.getVideoTracks()[0];
-  if (!track) return;
-
-  const capabilities = typeof track.getCapabilities === "function"
-    ? track.getCapabilities()
-    : {};
-
-  if (!capabilities.torch) {
-    alert("Flash/torch tidak didukung oleh kamera atau browser perangkat ini.");
-    return;
-  }
-
-  try {
-    state.torchOn = !state.torchOn;
-    await track.applyConstraints({ advanced: [{ torch: state.torchOn }] });
-    updateMobileCameraUi();
-  } catch (error) {
-    console.error("Torch error:", error);
-    state.torchOn = false;
-    updateMobileCameraUi();
-    alert("Flash tidak dapat diaktifkan pada kamera ini.");
-  }
-}
-
-async function switchMobileCamera() {
-  if (!state.cameraStarted) {
-    await startCameraWithPermission();
-    return;
-  }
-
-  state.facingMode.value = state.facingMode.value === "environment" ? "user" : "environment";
-  state.torchOn = false;
-  await startCamera();
-}
-
-async function toggleMobileAi() {
-  if (!state.cameraStarted) {
-    await startCameraWithPermission();
-    return;
-  }
-
-  if (!state.model) {
-    await loadModel();
-    if (!state.model) return;
-  }
-
-  if (state.isDetecting) {
-    stopDetection();
-  } else {
-    startDetection();
-  }
-}
-
-async function startCamera() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    alert("Browser ini tidak mendukung getUserMedia(). Gunakan Chrome/Edge/Firefox terbaru melalui HTTPS atau localhost.");
-    return;
-  }
-
-  stopCamera();
-  setOverlay("Meminta izin kamera...", true);
-
-  try {
-    const facingMode = el.facingMode.value;
-    state.stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: facingMode },
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      },
-      audio: false
-    });
-
-    el.video.srcObject = state.stream;
-    await el.video.play();
-    await new Promise((resolve) => {
-      if (el.video.readyState >= 2) resolve();
-      else el.video.addEventListener("loadedmetadata", resolve, { once: true });
-    });
-
-    syncCanvasSize();
-    state.cameraStarted = true;
-    state.torchOn = false;
-    el.startCameraBtn.disabled = true;
-    el.stopCameraBtn.disabled = false;
-    el.toggleAiBtn.disabled = !state.model;
-    el.cameraStatus.textContent = "ON";
-    setOverlay("Kamera siap. Arahkan kamera ke objek.", false);
-    updateMobileCameraUi();
-  } catch (error) {
-    console.error("Camera error:", error);
-    setOverlay("Kamera gagal dibuka. Cek izin kamera dan gunakan HTTPS/localhost.", true);
-    alert(`Gagal mengakses kamera: ${error.message}`);
-  }
-}
-
-function stopCamera() {
-  stopDetection();
-
-  if (state.stream) {
-    state.stream.getTracks().forEach((track) => track.stop());
-    state.stream = null;
-  }
-
-  el.video.srcObject = null;
-  state.cameraStarted = false;
-  state.torchOn = false;
-  el.startCameraBtn.disabled = false;
-  el.stopCameraBtn.disabled = true;
-  el.toggleAiBtn.disabled = true;
-  el.cameraStatus.textContent = "OFF";
-  el.ctx.clearRect(0, 0, el.canvas.width, el.canvas.height);
-  setOverlay("Kamera berhenti. Klik Buka Kamera untuk memulai lagi.", true);
-  updateMobileCameraUi();
-}
-
-async function loadModel() {
-  if (state.model || state.modelLoading) return;
-  state.modelLoading = true;
-  el.loadModelBtn.disabled = true;
-  setModelStatus("Memuat model...", "warn");
-  setOverlay("Mengunduh model COCO-SSD. Tunggu sebentar...", true);
-
-  try {
-    await tf.ready();
-    state.model = await cocoSsd.load({ base: "lite_mobilenet_v2" });
-    setModelStatus("Model siap", "success");
-    el.toggleAiBtn.disabled = !state.cameraStarted;
-    el.loadModelBtn.textContent = "✅ Model Siap";
-
-    if (state.cameraStarted) {
-      setOverlay("Model siap. Klik Start AI.", false);
-    } else {
-      setOverlay("Model siap. Sekarang nyalakan kamera.", true);
     }
-  } catch (error) {
-    console.error("Model load error:", error);
-    state.model = null;
-    el.loadModelBtn.disabled = false;
-    setModelStatus("Model gagal", "warn");
-    setOverlay("Gagal memuat model. Pastikan internet aktif.", true);
-    alert("Gagal memuat COCO-SSD. Coba refresh halaman dan pastikan koneksi internet aktif.");
-  } finally {
-    state.modelLoading = false;
-  }
-}
 
-function drawDetections(predictions) {
-  syncCanvasSize();
-  const ctx = el.ctx;
-  ctx.clearRect(0, 0, el.canvas.width, el.canvas.height);
-
-  const scaleX = el.canvas.width / Math.max(el.video.videoWidth, 1);
-  const scaleY = el.canvas.height / Math.max(el.video.videoHeight, 1);
-
-  predictions.forEach((pred) => {
-    const [x, y, width, height] = pred.bbox;
-    const canvasX = x * scaleX;
-    const canvasY = y * scaleY;
-    const canvasW = width * scaleX;
-    const canvasH = height * scaleY;
-    const isTarget = state.selectedTargets.has(pred.class);
-    const meets = pred.score >= state.confidence;
-
-    ctx.lineWidth = isTarget ? 3 : 1.5;
-    ctx.strokeStyle = isTarget ? "#ec4899" : "#a78bfa";
-    ctx.strokeRect(canvasX, canvasY, canvasW, canvasH);
-
-    if (isTarget && meets) {
-      const label = `${CLASS_LABELS[pred.class] || pred.class} ${(pred.score * 100).toFixed(0)}%`;
-      ctx.font = "700 14px Nunito, sans-serif";
-      const labelWidth = ctx.measureText(label).width + 14;
-      const labelY = Math.max(canvasY - 25, 0);
-      ctx.fillStyle = "#ec4899";
-      ctx.fillRect(canvasX, labelY, labelWidth, 25);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(label, canvasX + 7, labelY + 17);
-    }
-  });
-}
-
-async function detectFrame() {
-  if (!state.isDetecting) return;
-  if (!state.cameraStarted || !state.model) {
-    stopDetection();
-    return;
-  }
-
-  if (!state.detectionBusy && el.video.readyState >= 2) {
-    state.detectionBusy = true;
-    try {
-      const predictions = await state.model.detect(el.video);
-      const targetPredictions = predictions.filter((pred) =>
-        state.selectedTargets.has(pred.class) && pred.score >= state.confidence
-      );
-
-      drawDetections(predictions);
-      el.detectionCount.textContent = String(targetPredictions.length);
-      if (el.mobileDetectionCount) {
-        el.mobileDetectionCount.textContent = `${targetPredictions.length} objek`;
-      }
-
-      if (targetPredictions.length > 0) {
-        await saveToDatabase(targetPredictions);
-      }
-    } catch (error) {
-      console.error("Detection error:", error);
-    } finally {
-      state.detectionBusy = false;
-    }
-  }
-
-  state.frameHandle = requestAnimationFrame(detectFrame);
-}
-
-function startDetection() {
-  if (!state.cameraStarted) {
-    alert("Nyalakan kamera terlebih dahulu.");
-    return;
-  }
-  if (!state.model) {
-    alert("Muat model AI terlebih dahulu.");
-    return;
-  }
-  if (state.isDetecting) return;
-
-  state.isDetecting = true;
-  state.lastSaveAt = 0;
-  el.aiState.textContent = "ON";
-  el.aiState.className = "mini-state pink";
-  el.toggleAiBtn.textContent = "⏸ Stop AI";
-  updateMobileCameraUi();
-  el.toggleAiBtn.className = "btn btn-secondary full-width";
-  setOverlay("AI aktif. Arahkan kamera ke objek target.", false);
-  detectFrame();
-}
-
-function stopDetection() {
-  state.isDetecting = false;
-  state.detectionBusy = false;
-  if (state.frameHandle) cancelAnimationFrame(state.frameHandle);
-  state.frameHandle = null;
-  el.aiState.textContent = "OFF";
-  el.aiState.className = "mini-state";
-  el.toggleAiBtn.textContent = "▶ Start AI";
-  el.toggleAiBtn.className = "btn btn-success full-width";
-  el.detectionCount.textContent = "0";
-  if (el.mobileDetectionCount) el.mobileDetectionCount.textContent = "0 objek";
-  el.ctx.clearRect(0, 0, el.canvas.width, el.canvas.height);
-  updateMobileCameraUi();
-}
-
-function applyDbMode(mode) {
-  state.dbMode = mode;
-  document.querySelectorAll("[data-db-mode]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.dbMode === mode);
-  });
-  el.logModeBadge.textContent = mode.toUpperCase();
-
-  if (mode === "firebase") {
-    if (!state.firebaseEnabled) {
-      const initialized = initFirebase();
-      if (!initialized) {
-        alert("Firebase config belum valid. Isi firebaseConfig di app.js terlebih dahulu.");
-        state.dbMode = "mock";
-        document.querySelectorAll("[data-db-mode]").forEach((button) => {
-          button.classList.toggle("active", button.dataset.dbMode === "mock");
-        });
-        el.logModeBadge.textContent = "MOCK";
-        setDbStatus("Mock Mode", "pink");
-        listenToDatabase();
-        return;
-      }
-    }
-    setDbStatus("Firebase ON", "success");
-    el.clearLogsBtn.style.display = "none";
-  } else {
-    setDbStatus("Mock Mode", "pink");
-    el.clearLogsBtn.style.display = "inline-flex";
-  }
-
-  listenToDatabase();
-}
-
-el.startCameraBtn.addEventListener("click", startCameraWithPermission);
-el.stopCameraBtn.addEventListener("click", stopCamera);
-
-el.mobileStartCameraBtn?.addEventListener("click", startCameraWithPermission);
-el.mobileSwitchCameraBtn?.addEventListener("click", switchMobileCamera);
-el.mobileFlashBtn?.addEventListener("click", toggleTorch);
-el.mobileAiBtn?.addEventListener("click", toggleMobileAi);
-el.loadModelBtn.addEventListener("click", loadModel);
-el.toggleAiBtn.addEventListener("click", () => {
-  state.isDetecting ? stopDetection() : startDetection();
-});
-el.facingMode.addEventListener("change", () => {
-  if (state.cameraStarted) startCamera();
-});
-el.confidenceRange.addEventListener("input", (event) => {
-  state.confidence = Number(event.target.value) / 100;
-  el.confidenceValue.textContent = `${event.target.value}%`;
-});
-el.exportBtn.addEventListener("click", exportLogsAsCsv);
-el.clearLogsBtn.addEventListener("click", clearMockLogs);
-document.querySelectorAll("[data-db-mode]").forEach((button) => {
-  button.addEventListener("click", () => applyDbMode(button.dataset.dbMode));
-});
-window.addEventListener("resize", syncCanvasSize);
-window.addEventListener("beforeunload", () => {
-  closeDbListener();
-  stopCamera();
-});
-
-function initApp() {
-  renderTargetCheckboxes();
-  renderLogs();
-  applyDbMode("mock");
-  updateMobileCameraUi();
-
-  const firebaseReady = initFirebase();
-  if (firebaseReady) {
-    setDbStatus("Siap · config tersedia", "success");
-  } else {
-    setDbStatus("Mock Mode", "pink");
-  }
-
-  console.log("✅ Edge AI Inventory Scanner siap.");
-  console.log("📱 Device ID:", getDeviceId());
-  console.log("☁️ Firebase config tersedia:", firebaseReady);
-}
-
-initApp();
+    ui();
+  };
 
 
-window.addEventListener("DOMContentLoaded", () => {
-  if (window.matchMedia("(max-width: 767px)").matches && !state.cameraStarted) {
-    showCameraPermissionGate(
-      "Akses Kamera Diperlukan",
-      "Izinkan akses kamera untuk menggunakan AI Object Scanner. Kamera hanya digunakan setelah kamu menekan tombol."
-    );
-  }
-});
+$("ai").onclick =
+  toggleAI;
+
+
+$("load").onclick =
+  loadModel;
+
+
+$("export").onclick =
+  exportCSV;
+
+
+$("conf").oninput =
+  event => {
+
+    S.conf =
+      event.target.value / 100;
+
+    $("confText").textContent =
+      event.target.value + "%";
+
+  };
+
+
+S.logs =
+  JSON.parse(
+    localStorage.aiLogs || "[]"
+  );
+
+renderLogs();
+ui();
 
 </script>
-
-<div id="cameraPermissionGate" class="camera-permission-gate" aria-hidden="true">
-  <div class="camera-permission-card">
-    <div class="camera-permission-icon">📷</div>
-    <h2 id="permissionTitle">Akses Kamera Diperlukan</h2>
-    <p id="permissionDescription">Izinkan akses kamera untuk menggunakan AI Object Scanner. Kamera tidak digunakan sebelum kamu menekan tombol.</p>
-    <button id="permissionButton" class="camera-permission-btn" type="button">Izinkan Kamera</button>
-    <p id="permissionError" class="camera-permission-error"></p>
-    <p id="permissionHelp" class="camera-permission-help">Jika sebelumnya memilih “Tolak”, buka izin kamera pada browser dan pilih <b>Izinkan</b>, lalu reload halaman.</p>
-  </div>
-</div>
 
 </body>
 </html>
